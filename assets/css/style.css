@@ -1,0 +1,55 @@
+   body {
+      background-color: #f4f4f9;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding-top: 40px;
+    }
+    .output-box {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .box-title {
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+    .code-box {
+      background-color: #eef6fb;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      word-wrap: break-word;
+    }
+    .codon {
+      background-color: #d1ecf1;
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin: 2px;
+      display: inline-block;
+    }
+    .amino {
+      display: inline-block;
+      background-color: #c8e6c9;
+      border-radius: 20px;
+      padding: 6px 12px;
+      margin: 4px;
+      font-weight: 500;
+    }
+.mutacao {
+  background-color: #fff3cd;
+  border: 1px dashed #ffc107;
+}
+
+.codon-mutado {
+  background-color: #fde2e4;
+}
+
+.amino-mutado {
+  background-color: #ffe0b2;
+}

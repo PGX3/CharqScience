@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador DNA → RNA → Proteína</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+<script src="assets/js/dna.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h1 class="text-center mb-4 text-primary">Simulador DNA → RNA → Proteína</h1>
+
+  <div class="mb-3">
+    <label for="dnaInput" class="form-label">Sequência de DNA:</label>
+    <textarea id="dnaInput" class="form-control" rows="2" placeholder="Digite a sequência de DNA (ex: ATGCCG...)"></textarea>
+  </div>
+
+  <div class="mb-3">
+    <button class="btn btn-primary me-2" onclick="processar()">Simular</button>
+    <button class="btn btn-secondary" onclick="limpar()">Limpar</button>
+  </div>
+
+  <div class="output-box">
+    <h5 class="box-title">RNA Transcrito:</h5>
+    <div id="rnaOutput" class="code-box"></div>
+
+    <h5 class="box-title mt-4">Aminoácidos Formados:</h5>
+    <div id="proteinaOutput"></div>
+  </div>
+
+  <div class="output-box mt-4">
+  <h5 class="box-title">Mutação:</h5>
+
+  <div class="row g-2 mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Tipo:</label>
+      <select id="tipoMutacao" class="form-select">
+        <option value="substituir">Substituição</option>
+        <option value="inserir">Inserção</option>
+        <option value="deletar">Deleção</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Posição:</label>
+      <input type="number" id="posicaoMutacao" class="form-control" min="1" placeholder="Ex: 3">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Base (se aplicável):</label>
+      <input type="text" id="baseMutacao" class="form-control" maxlength="1" placeholder="A, T, C ou G">
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button class="btn btn-warning w-100" onclick="aplicarMutacao()">Aplicar Mutação</button>
+    </div>
+  </div>
+
+  <div>
+    <strong>DNA Atual:</strong>
+    <div id="dnaAtual" class="code-box"></div>
+  </div>
+</div>
+
+
+
+</div>
+
+
+
+</body>
+</html>

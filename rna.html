@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>DNA 3D</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({antialias: true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  const helixMaterial1 = new THREE.MeshStandardMaterial({ color: 0x00ffff });
+  const helixMaterial2 = new THREE.MeshStandardMaterial({ color: 0xff00ff });
+  const barMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+
+  const lights = new THREE.PointLight(0xffffff, 1);
+  lights.position.set(10, 10, 10);
+  scene.add(lights);
+
+  const group = new THREE.Group();
+
+  const helixRadius = 2;
+  const helixHeight = 20;
+  const turns = 20;
+  const segments = 100;
+
+  for (let i = 0; i < segments; i++) {
+    const angle = i * turns * Math.PI * 2 / segments;
+    const y = (i / segments) * helixHeight - helixHeight/2;
+
+    const x1 = Math.cos(angle) * helixRadius;
+    const z1 = Math.sin(angle) * helixRadius;
+
+    const x2 = Math.cos(angle + Math.PI) * helixRadius;
+    const z2 = Math.sin(angle + Math.PI) * helixRadius;
+
+    const sphere1 = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), helixMaterial1);
+    sphere1.position.set(x1, y, z1);
+    group.add(sphere1);
+
+    const sphere2 = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), helixMaterial2);
+    sphere2.position.set(x2, y, z2);
+    group.add(sphere2);
+
+    // Ligação entre as hélices
+    const barGeom = new THREE.CylinderGeometry(0.05, 0.05, helixRadius * 2, 8);
+    const bar = new THREE.Mesh(barGeom, barMaterial);
+
+    const midX = (x1 + x2) / 2;
+    const midY = y;
+    const midZ = (z1 + z2) / 2;
+    bar.position.set(midX, midY, midZ);
+
+    const dx = x2 - x1;
+    const dy = 0;
+    const dz = z2 - z1;
+
+    const angleY = Math.atan2(dz, dx);
+    bar.rotation.y = angleY;
+    bar.rotation.z = Math.PI / 2;
+
+    group.add(bar);
+  }
+
+  scene.add(group);
+  camera.position.z = 15;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.01;
+    renderer.render(scene, camera);
+  }
+
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+
+</body>
+</html>
