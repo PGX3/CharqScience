@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Simulador DNA — Interativo</title>
+  <meta name="color-scheme" content="light dark">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b1020; --card:#0f1840; --text:#e8eefc; --muted:#aab7d4;
+      --accent:#22d3ee; --primary:#7aa2ff; --success:#10b981; --warn:#f59e0b; --danger:#ef4444;
+      --ring:#3b82f6; --shadow:0 12px 30px rgba(2,6,23,.6);
+    }
+    :root.light{
+      --bg:#f6f8ff; --card:#fff; --text:#071022; --muted:#475569;
+      --accent:#06b6d4; --primary:#1e40af; --success:#059669; --warn:#b45309; --danger:#dc2626;
+      --ring:#2563eb; --shadow:0 8px 22px rgba(2,6,23,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800}
+    .brand-logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(90deg,var(--accent),var(--primary));display:grid;place-items:center;color:#fff;font-weight:900;box-shadow:var(--shadow)}
+    .title{font-size:20px}
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn{background:linear-gradient(90deg,var(--accent),var(--primary));color:#fff;border:0;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--text)}
+    .card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.03)}
+    label{display:block;margin-bottom:6px;color:var(--muted);font-weight:600}
+    textarea{width:100%;min-height:64px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.04);background:transparent;color:var(--text);font-family:monospace}
+    .row{display:flex;gap:16px}
+    .col{flex:1}
+    .dna-strip{display:flex;flex-wrap:wrap;gap:6px;padding:10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);min-height:56px;align-items:center}
+    .base{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:8px;font-weight:800;cursor:pointer;user-select:none;box-shadow:0 6px 14px rgba(2,6,23,.3);transition:transform .12s,box-shadow .12s}
+    .base:focus{outline:3px solid var(--ring);outline-offset:3px}
+    .base:hover{transform:translateY(-4px)}
+    .insert-btn{width:28px;height:28px;border-radius:8px;border:0;display:grid;place-items:center;cursor:pointer;background:rgba(255,255,255,.04)}
+    .insert-btn:hover{transform:translateY(-2px)}
+    .dna-index{font-size:11px;color:var(--muted);margin-top:6px;text-align:center}
+    .codon{display:inline-block;padding:6px 8px;border-radius:8px;margin:4px;font-weight:700;opacity:0;transition:opacity .25s}
+    .timeline{display:flex;gap:8px;overflow:auto;padding:8px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent)}
+    .timeline .step{min-width:80px;padding:8px;border-radius:8px;background:rgba(255,255,255,.02);text-align:center}
+    .timeline .current{box-shadow:0 6px 18px rgba(0,0,0,.5);transform:scale(1.03)}
+    .proteins{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .amino{padding:6px 10px;border-radius:999px;font-weight:700;color:#fff;position:relative}
+    .amino[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:6px 8px;border-radius:8px;font-size:13px;white-space:nowrap}
+    .history{max-height:180px;overflow:auto;padding:8px;border-radius:8px;background:rgba(0,0,0,.06);font-size:14px}
+    .mut-action{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px dashed rgba(255,255,255,.02)}
+    .status{font-weight:800;padding:8px 12px;border-radius:12px;display:inline-block}
+    .status.ok{background:var(--success);color:#fff}
+    .status.warn{background:var(--warn);color:#fff}
+    .status.bad{background:var(--danger);color:#fff}
+    .small{font-size:13px;color:var(--muted)}
+    .examples{display:flex;gap:8px;flex-wrap:wrap}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,.06);padding:8px 10px;border-radius:8px;cursor:pointer}
+    .floating-menu{position:fixed;background:var(--card);padding:8px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:999;border:1px solid rgba(255,255,255,.04)}
+    .floating-menu button{margin:4px;padding:6px 10px;border-radius:8px;border:0;cursor:pointer}
+    .tooltip-lite{position:fixed;background:#000;color:#fff;padding:6px 8px;border-radius:6px;font-size:13px;pointer-events:none;opacity:0;transition:opacity .15s}
+    footer{text-align:center;padding:18px;color:var(--muted);font-size:14px}
+    @media (max-width:800px){ .row{flex-direction:column} .timeline .step{min-width:68px} .base{width:32px;height:32px} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand"><div class="brand-logo" aria-hidden="true">🧬</div><div><div class="title">Simulador DNA — Interativo</div><div class="small">Edite a fita, aplique mutações, veja a tradução em tempo real</div></div></div>
+      <div class="controls">
+        <button id="themeToggle" class="btn secondary" title="Alternar tema">Tema</button>
+        <a href="home.html" class="btn secondary" style="text-decoration:none">Voltar</a>
+      </div>
+    </header>
+
+    <!-- Input / examples -->
+    <div class="card">
+      <label for="dnaInput">Sequência de DNA (A,T,C,G)</label>
+      <textarea id="dnaInput" placeholder="Digite ou cole aqui..."></textarea>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button id="btnSim" class="btn">▶ Simular</button>
+        <button id="btnClear" class="btn secondary">♻ Limpar</button>
+        <div class="examples" aria-hidden="false" style="margin-left:auto">
+          <button class="ghost" data-ex="ATGCCGTA">ATGCCGTA</button>
+          <button class="ghost" data-ex="TACGGTCA">TACGGTCA</button>
+          <button class="ghost" data-ex="ATGTTTGGGCCC">ATGTTTGGGCCC</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive DNA / timeline / outputs -->
+    <div class="row">
+      <div class="col">
+        <div class="card" aria-label="Fita de DNA interativa">
+          <label>Fita de DNA (clique em uma base para editar)</label>
+          <div id="dnaStrip" class="dna-strip" tabindex="0" role="list" aria-live="polite"></div>
+          <div class="small" style="margin-top:8px">Clique entre bases para inserir. Clique numa base para substituir ou deletar.</div>
+        </div>
+
+        <div class="card">
+          <label>Linha do tempo da tradução</label>
+          <div id="timeline" class="timeline" aria-live="polite"></div>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button id="playBtn" class="btn">▶ Play</button>
+            <button id="pauseBtn" class="btn secondary">⏸ Pause</button>
+            <button id="stepBtn" class="btn secondary">⤷ Step</button>
+            <div style="margin-left:auto" id="translationStatus"></div>
+          </div>
+          <div class="proteins" id="proteinsArea" aria-live="polite" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <div class="col" style="max-width:360px">
+        <div class="card">
+          <label>Mutação / Histórico</label>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <select id="quickType" style="flex:1;padding:8px;border-radius:8px">
+              <option value="substituir">Substituição</option>
+              <option value="inserir">Inserção</option>
+              <option value="deletar">Deleção</option>
+            </select>
+            <input id="quickBase" maxlength="1" placeholder="Base" style="width:80px;padding:8px;border-radius:8px">
+          </div>
+          <div class="history" id="history"></div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button id="undoBtn" class="btn secondary" disabled>⮌ Desfazer</button>
+            <button id="resetBtn" class="btn secondary">⟲ Reset</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <label>Notas</label>
+          <div class="small">Dicas rápidas:</div>
+          <ul style="margin:8px 0 0 18px;color:var(--muted)">
+            <li>Use os exemplos para preencher rápido.</li>
+            <li>Clique nas bases para abrir o menu de edição.</li>
+            <li>Use Play para ver a tradução codon-a-codon.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <footer>Feito para estudantes • Interativo • <span aria-hidden="true">🧬</span></footer>
+  </div>
+
+  <!-- floating menu and tooltip -->
+  <div id="menu" class="floating-menu" style="display:none" role="dialog" aria-hidden="true"></div>
+  <div id="liteTip" class="tooltip-lite" aria-hidden="true"></div>
+
+  <script>
+    // --- Codon table (RNA) ---
+    const tabelaCodons = {
+      'UUU':'Fenilalanina','UUC':'Fenilalanina','UUA':'Leucina','UUG':'Leucina',
+      'CUU':'Leucina','CUC':'Leucina','CUA':'Leucina','CUG':'Leucina',
+      'AUU':'Isoleucina','AUC':'Isoleucina','AUA':'Isoleucina','AUG':'Metionina (Início)',
+      'GUU':'Valina','GUC':'Valina','GUA':'Valina','GUG':'Valina',
+      'UCU':'Serina','UCC':'Serina','UCA':'Serina','UCG':'Serina',
+      'CCU':'Prolina','CCC':'Prolina','CCA':'Prolina','CCG':'Prolina',
+      'ACU':'Treonina','ACC':'Treonina','ACA':'Treonina','ACG':'Treonina',
+      'GCU':'Alanina','GCC':'Alanina','GCA':'Alanina','GCG':'Alanina',
+      'UAU':'Tirosina','UAC':'Tirosina','UAA':'Parada','UAG':'Parada',
+      'CAU':'Histidina','CAC':'Histidina','CAA':'Glutamina','CAG':'Glutamina',
+      'AAU':'Asparagina','AAC':'Asparagina','AAA':'Lisina','AAG':'Lisina',
+      'GAU':'Ácido aspártico','GAC':'Ácido aspártico','GAA':'Ácido glutâmico','GAG':'Ácido glutâmico',
+      'UGU':'Cisteína','UGC':'Cisteína','UGA':'Parada','UGG':'Triptofano',
+      'CGU':'Arginina','CGC':'Arginina','CGA':'Arginina','CGG':'Arginina',
+      'AGU':'Serina','AGC':'Serina','AGA':'Arginina','AGG':'Arginina',
+      'GGU':'Glicina','GGC':'Glicina','GGA':'Glicina','GGG':'Glicina'
+    };
+
+    // --- Utils ---
+    function sanitizeDNA(s){ return (s||'').toUpperCase().replace(/[^ATCG]/g,''); }
+    function transcrever(dna){ return dna.replace(/T/g,'U'); }
+    function traduzir(rna){
+      const prot = [];
+      for(let i=0;i<rna.length;i+=3){
+        const codon = rna.slice(i,i+3);
+        if(codon.length<3) break;
+        const aa = tabelaCodons[codon] || '???';
+        if(aa==='Parada') { prot.push({codon, aa:'Parada', stop:true}); break; }
+        prot.push({codon, aa, stop:false});
+      }
+      return prot;
+    }
+    function colorBase(b){ const map={A:'#f87171',T:'#fbbf24',C:'#34d399',G:'#60a5fa',U:'#a78bfa'}; return map[b]||'#cbd5e1' }
+
+    // --- State ---
+    let dna = '';
+    let history = []; // {type, pos, baseBefore, baseAfter}
+    let playInterval = null;
+    let playIndex = 0;
+    let timelineSteps = [];
+    const dnaStrip = document.getElementById('dnaStrip');
+    const rInput = document.getElementById('dnaInput');
+    const timelineEl = document.getElementById('timeline');
+    const proteinsArea = document.getElementById('proteinsArea');
+    const historyEl = document.getElementById('history');
+    const menu = document.getElementById('menu');
+    const tip = document.getElementById('liteTip');
+
+    // --- Init theme toggle ---
+    (function(){
+      const btn = document.getElementById('themeToggle');
+      const current = localStorage.getItem('theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      if(current==='light') document.documentElement.classList.add('light');
+      btn.addEventListener('click', ()=>{ document.documentElement.classList.toggle('light'); localStorage.setItem('theme', document.documentElement.classList.contains('light')?'light':'dark') });
+    })();
+
+    // --- Render DNA strip ---
+    function renderDNA(){
+      dnaStrip.innerHTML = '';
+      for(let i=0;i<dna.length;i++){
+        // insert button before each base (for insertion between)
+        const insert = document.createElement('button');
+        insert.className='insert-btn';
+        insert.innerHTML='+';
+        insert.title = 'Inserir aqui';
+        insert.addEventListener('click', (e)=>{ e.stopPropagation(); openInsertAt(i); });
+        dnaStrip.appendChild(insert);
+
+        const b = dna[i];
+        const span = document.createElement('button');
+        span.className='base';
+        span.setAttribute('data-index', i);
+        span.setAttribute('aria-label','Base '+b+' na posição '+(i+1));
+        span.style.background = colorBase(b);
+        span.style.color = 'white';
+        span.textContent = b;
+        span.addEventListener('click', (ev)=>{ ev.stopPropagation(); openMenuFor(span); });
+        span.addEventListener('mouseenter', (ev)=> showTip(ev, baseInfo(b)) );
+        span.addEventListener('mouseleave', ()=> hideTip());
+        span.addEventListener('focus', (ev)=> openMenuFor(span));
+        dnaStrip.appendChild(span);
+      }
+      // insert at end
+      const insertEnd = document.createElement('button');
+      insertEnd.className='insert-btn';
+      insertEnd.innerHTML='+';
+      insertEnd.title = 'Inserir no final';
+      insertEnd.addEventListener('click', (e)=>{ e.stopPropagation(); openInsertAt(dna.length); });
+      dnaStrip.appendChild(insertEnd);
+
+      updateFromDNA();
+    }
+
+    function baseInfo(b){
+      const map = {A:'A = Adenina. Emparelha com T',T:'T = Timina. Emparelha com A',C:'C = Citosina. Emparelha com G',G:'G = Guanina. Emparelha com C'};
+      return map[b] || '';
+    }
+
+    // --- Floating menu for edit ---
+    function openMenuFor(elem){
+      const rect = elem.getBoundingClientRect();
+      menu.style.left = (rect.right + window.scrollX + 8) + 'px';
+      menu.style.top = (rect.top + window.scrollY) + 'px';
+      menu.innerHTML = '';
+      menu.style.display = 'block'; menu.setAttribute('aria-hidden','false');
+
+      const idx = parseInt(elem.dataset.index);
+      const b = dna[idx];
+
+      // replace buttons
+      const row = document.createElement('div');
+      ['A','T','C','G'].forEach(ch=>{
+        const btn = document.createElement('button');
+        btn.textContent = ch;
+        btn.style.background = colorBase(ch);
+        btn.style.color = '#fff';
+        btn.style.border='0';
+        btn.style.borderRadius='8px';
+        btn.style.margin='4px';
+        btn.addEventListener('click', ()=>{ applySubstitution(idx,ch); closeMenu(); });
+        row.appendChild(btn);
+      });
+      menu.appendChild(row);
+
+      // delete
+      const del = document.createElement('div');
+      del.style.marginTop='8px';
+      const delBtn = document.createElement('button');
+      delBtn.textContent='Deletar';
+      delBtn.style.background='var(--danger)';
+      delBtn.style.color='#fff';
+      delBtn.style.border='0';
+      delBtn.style.padding='6px 8px';
+      delBtn.style.borderRadius='8px';
+      delBtn.addEventListener('click', ()=>{ applyDeletion(idx); closeMenu(); });
+      del.appendChild(delBtn);
+      menu.appendChild(del);
+    }
+
+    function closeMenu(){ menu.style.display='none'; menu.setAttribute('aria-hidden','true'); }
+
+    // --- Insert UI ---
+    function openInsertAt(pos){
+      // small prompt for base choice
+      const base = prompt('Inserir qual base? (A,T,C,G)');
+      if(!base) return;
+      const b = base.toUpperCase().trim();
+      if(!/[ATCG]/.test(b)){ alert('Base inválida'); return; }
+      const before = dna;
+      dna = dna.slice(0,pos) + b + dna.slice(pos);
+      history.push({type:'inserir',pos,baseBefore:before,baseAfter:dna});
+      renderDNA();
+      renderHistory();
+    }
+
+    // --- Mutations ---
+    function applySubstitution(pos, newBase){
+      const before = dna;
+      const old = dna[pos];
+      if(old===newBase) return;
+      dna = dna.slice(0,pos) + newBase + dna.slice(pos+1);
+      history.push({type:'substituir',pos,posOne:pos+1,baseBefore:old,baseAfter:newBase});
+      renderDNA();
+      renderHistory();
+      flashBase(pos);
+    }
+    function applyDeletion(pos){
+      const before = dna;
+      const old = dna[pos];
+      dna = dna.slice(0,pos) + dna.slice(pos+1);
+      history.push({type:'deletar',pos,posOne:pos+1,baseBefore:old,baseAfter:null});
+      renderDNA();
+      renderHistory();
+    }
+
+    function flashBase(pos){
+      const el = document.querySelector('[data-index="'+pos+'"]');
+      if(!el) return;
+      el.animate([{transform:'scale(1.18)'},{transform:'scale(1)'}],{duration:700,easing:'ease-out'});
+    }
+
+    // --- Apply quick mutation from sidebar (by selecting position) ---
+    document.getElementById('history').addEventListener('click', (e)=>{});
+    document.getElementById('undoBtn').addEventListener('click', ()=>{
+      const last = history.pop();
+      if(!last) return;
+      // revert to previous state using baseBefore in history entries saved as full string sometimes
+      if(last.type==='inserir'){
+        // remove char at pos
+        dna = dna.slice(0,last.pos) + dna.slice(last.pos+1);
+      }else if(last.type==='deletar'){
+        // insert old char back
+        dna = dna.slice(0,last.pos) + last.baseBefore + dna.slice(last.pos);
+      }else if(last.type==='substituir'){
+        dna = dna.slice(0,last.pos) + last.baseBefore + dna.slice(last.pos+1);
+      }else if(last.type==='set'){
+        dna = last.baseBefore || '';
+      }
+      renderDNA(); renderHistory();
+      document.getElementById('undoBtn').disabled = history.length===0;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
+      if(!confirm('Resetar fita para vazia e limpar histórico?')) return;
+      dna=''; history=[]; renderDNA(); renderHistory();
+      document.getElementById('undoBtn').disabled = true;
+    });
+
+    function renderHistory(){
+      historyEl.innerHTML = '';
+      for(let i=history.length-1;i>=0;i--){
+        const h = history[i];
+        const div = document.createElement('div');
+        div.className='mut-action';
+        const txt = document.createElement('div');
+        if(h.type==='substituir') txt.textContent = `Pos ${h.posOne}: ${h.baseBefore} → ${h.baseAfter}`;
+        else if(h.type==='inserir') txt.textContent = `Inserção na pos ${h.pos+1}: ${h.baseAfter.charAt(h.pos)}`;
+        else if(h.type==='deletar') txt.textContent = `Deleção pos ${h.posOne}: ${h.baseBefore}`;
+        else txt.textContent = JSON.stringify(h);
+        const btn = document.createElement('button');
+        btn.textContent = '⮌ desfazer';
+        btn.className='btn secondary';
+        btn.style.padding='6px 8px';
+        btn.addEventListener('click', ()=>{ // undo this specific action
+          // remove this entry from history and then rebuild dna from earliest 'set' or empty and replay history except this
+          history.splice(i,1);
+          // rebuild dna from initial set if exists
+          let base = '';
+          for(let j=0;j<history.length;j++){
+            const act = history[j];
+            if(act.type==='set'){ base = act.baseAfter; continue; }
+            if(act.type==='inserir'){ base = base.slice(0,act.pos) + act.baseAfter.charAt(act.pos) + base.slice(act.pos); }
+            else if(act.type==='deletar'){ base = base.slice(0,act.pos) + base.slice(act.pos+1); }
+            else if(act.type==='substituir'){ base = base.slice(0,act.pos) + act.baseAfter + base.slice(act.pos+1); }
+          }
+          dna = base;
+          renderDNA(); renderHistory();
+        });
+        div.appendChild(txt); div.appendChild(btn);
+        historyEl.appendChild(div);
+      }
+      document.getElementById('undoBtn').disabled = history.length===0;
+    }
+
+    // --- Update functions to show RNA and proteins and timeline ---
+    function updateFromDNA(){
+      const rna = transcrever(dna);
+      // codons array
+      const codons = [];
+      for(let i=0;i<rna.length;i+=3) codons.push(rna.slice(i,i+3));
+      // render timeline steps
+      timelineEl.innerHTML = '';
+      timelineSteps = [];
+      codons.forEach((c,i)=>{
+        const step = document.createElement('div');
+        step.className='step';
+        step.innerHTML = `<div style="font-weight:800">${c}</div><div class="small">codon ${i+1}</div>`;
+        timelineEl.appendChild(step);
+        timelineSteps.push({codon:c,el:step});
+      });
+      // render proteins area (initial)
+      proteinsArea.innerHTML = '';
+      const prot = traduzir(rna);
+      if(prot.length===0){ proteinsArea.innerHTML = '<div class="small" style="color:var(--muted)">Nenhuma proteína formada.</div>'; setStatus('bad'); }
+      else{
+        prot.forEach(p=>{
+          const sp = document.createElement('div');
+          sp.className='amino';
+          sp.textContent = p.aa;
+          sp.setAttribute('data-tooltip', p.aa + (p.stop? ' — STOP' : ''));
+          sp.style.background = `linear-gradient(90deg, ${colorBase(p.codon[0]||'A')}, ${colorBase((p.codon[2]||'G'))})`;
+          proteinsArea.appendChild(sp);
+        });
+        // status: if last has stop early and not full length -> warn; else ok
+        const last = prot[prot.length-1];
+        if(last && last.stop && prot.length*3 < rna.length) setStatus('warn'); else setStatus('ok');
+      }
+      // Also render RNA as codon chips below timeline (visual)
+      // make RNA chips into timelineSteps already show codons
+    }
+
+    function setStatus(s){
+      const st = document.getElementById('translationStatus');
+      st.innerHTML = '';
+      const span = document.createElement('span');
+      span.className='status';
+      if(s==='ok'){ span.classList.add('ok'); span.textContent='Proteína formada'; }
+      else if(s==='warn'){ span.classList.add('warn'); span.textContent='Proteína interrompida (stop)'; }
+      else { span.classList.add('bad'); span.textContent='Nenhuma proteína formada'; }
+      st.appendChild(span);
+    }
+
+    // --- Playback controls for timeline ---
+    document.getElementById('playBtn').addEventListener('click', ()=> startPlay(600));
+    document.getElementById('pauseBtn').addEventListener('click', pausePlay);
+    document.getElementById('stepBtn').addEventListener('click', stepPlay);
+
+    function highlightStep(idx){
+      timelineSteps.forEach((s,i)=> s.el.classList.toggle('current', i===idx));
+      // also highlight corresponding codon by coloring
+      // show protein formed until idx
+      const rna = transcrever(dna);
+      const upto = rna.slice(0, (idx+1)*3 );
+      const prot = traduzir(upto);
+      proteinsArea.innerHTML = '';
+      if(prot.length===0){ proteinsArea.innerHTML = '<div class="small" style="color:var(--muted)">Nenhuma proteína formada.</div>'; setStatus('bad'); }
+      else{
+        prot.forEach(p=>{
+          const sp = document.createElement('div');
+          sp.className='amino';
+          sp.textContent = p.aa;
+          sp.setAttribute('data-tooltip', p.aa + (p.stop? ' — STOP' : ''));
+          sp.style.background = `linear-gradient(90deg, ${colorBase(p.codon[0]||'A')}, ${colorBase((p.codon[2]||'G'))})`;
+          proteinsArea.appendChild(sp);
+        });
+        const last = prot[prot.length-1];
+        if(last && last.stop && prot.length*3 < rna.length) setStatus('warn'); else setStatus('ok');
+      }
+    }
+
+    function startPlay(interval=600){
+      if(timelineSteps.length===0) return;
+      pausePlay();
+      playIndex = 0;
+      highlightStep(playIndex);
+      playInterval = setInterval(()=>{
+        playIndex++;
+        if(playIndex >= timelineSteps.length){ pausePlay(); return; }
+        highlightStep(playIndex);
+      }, interval);
+    }
+    function pausePlay(){ if(playInterval) clearInterval(playInterval); playInterval=null; }
+    function stepPlay(){
+      if(timelineSteps.length===0) return;
+      if(playInterval) pausePlay();
+      if(playIndex >= timelineSteps.length-1) playIndex = 0;
+      else playIndex++;
+      highlightStep(playIndex);
+    }
+
+    // --- UI bindings ---
+    document.getElementById('btnSim').addEventListener('click', ()=>{
+      dna = sanitizeDNA(rInput.value);
+      history.push({type:'set',baseBefore:null,baseAfter:dna});
+      renderDNA(); renderHistory();
+    });
+
+    document.getElementById('btnClear').addEventListener('click', ()=>{
+      rInput.value=''; dna=''; history.push({type:'set',baseBefore:null,baseAfter:dna}); renderDNA(); renderHistory();
+    });
+
+    document.querySelectorAll('.ghost').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ rInput.value = btn.dataset.ex; document.getElementById('btnSim').click(); });
+    });
+
+    // click outside to close menu and tooltip
+    document.addEventListener('click', (e)=>{ if(!menu.contains(e.target)) closeMenu(); hideTip(); });
+
+    // keyboard support for deletion: when DNA strip focused and Delete pressed, remove last
+    dnaStrip.addEventListener('keydown', (e)=>{
+      if(e.key==='Delete' || e.key==='Backspace'){ if(dna.length>0){ history.push({type:'deletar',pos:dna.length-1,posOne:dna.length,baseBefore:dna[dna.length-1]}); dna = dna.slice(0,-1); renderDNA(); renderHistory(); } }
+    });
+
+    // quick mutation from sidebar: user picks pos via prompt
+    document.getElementById('quickType').addEventListener('change', ()=>{});
+    document.getElementById('quickBase').addEventListener('keyup', (e)=>{ if(e.key==='Enter'){ applyQuick(); }});
+    function applyQuick(){
+      const type = document.getElementById('quickType').value;
+      const base = document.getElementById('quickBase').value.toUpperCase().trim();
+      let pos = parseInt(prompt('Digite a posição (1..'+(dna.length)+')'));
+      if(isNaN(pos) || pos<1 || pos>dna.length+ (type==='inserir'?1:0)){ alert('Posição inválida'); return; }
+      pos = pos-1;
+      if(type==='substituir'){ if(!/[ATCG]/.test(base)){ alert('Base inválida'); return; } applySubstitution(pos,base); }
+      else if(type==='inserir'){ if(!/[ATCG]/.test(base)){ alert('Base inválida'); return; } dna = dna.slice(0,pos) + base + dna.slice(pos); history.push({type:'inserir',pos,baseAfter:dna}); renderDNA(); renderHistory(); }
+      else if(type==='deletar'){ history.push({type:'deletar',pos,posOne:pos+1,baseBefore:dna[pos]}); dna = dna.slice(0,pos)+dna.slice(pos+1); renderDNA(); renderHistory(); }
+    }
+    // listen on quick apply button via Enter in base input
+    document.getElementById('quickBase').addEventListener('keypress', (e)=>{ if(e.key==='Enter') applyQuick(); });
+
+    // --- Tips ---
+    function showTip(ev, text){
+      if(!text) return;
+      tip.style.left = ev.clientX + 12 + 'px';
+      tip.style.top = ev.clientY + 12 + 'px';
+      tip.textContent = text;
+      tip.style.opacity = 1;
+      tip.setAttribute('aria-hidden','false');
+    }
+    function hideTip(){ tip.style.opacity=0; tip.setAttribute('aria-hidden','true'); }
+
+    // initial empty render
+    renderDNA();
+    renderHistory();
+
+    // expose for console debug
+    window._sim = {renderDNA, applySubstitution, applyDeletion, dna: ()=>dna};
+  </script>
+</body>
+</html>
