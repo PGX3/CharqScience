@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador DNA → RNA → Proteína</title>
-  <meta name="color-scheme" content="light dark">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DNA • RNA | Entenda e Simule</title>
+
+  <!-- Meta A11y -->
+  <meta name="description" content="Página educativa e interativa para aprender DNA e RNA e acessar um simulador de transcrição e tradução." />
+  <meta name="color-scheme" content="light dark" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
   <style>
     :root{
       --bg: #0b1020;
@@ -28,146 +37,459 @@
       --shadow: 0 10px 30px rgba(2,6,23,.08);
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter, sans-serif;background:var(--bg);color:var(--text);}
-    .container{max-width:1000px;margin:auto;padding:24px}
-    .title{text-align:center;font-size:clamp(26px,3vw,40px);margin:20px 0;font-weight:800}
-    .card{background:var(--card);border-radius:16px;padding:24px;margin-bottom:24px;
-      box-shadow:var(--shadow);border:1px solid rgba(148,163,184,.15);}
-    textarea{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(148,163,184,.2);
-      background:rgba(255,255,255,.05);color:var(--text);font-family:monospace;font-size:15px}
-    textarea:focus{outline:3px solid var(--ring)}
-    .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;margin:6px;border-radius:12px;
-      font-weight:600;cursor:pointer;border:0;transition:transform .2s}
-    .btn-primary{background:linear-gradient(90deg,var(--accent),var(--primary));color:white}
-    .btn-secondary{background:transparent;color:var(--text);border:1px solid rgba(148,163,184,.25)}
-    .btn-warning{background:#facc15;color:#0b1020}
-    .btn:hover{transform:translateY(-2px)}
-    .output-box{margin-top:20px}
-    .box-title{font-weight:700;margin-bottom:8px}
-    .code-box{background:rgba(255,255,255,.05);padding:12px;border-radius:8px;font-family:monospace;word-wrap:break-word}
-    .codon{display:inline-block;margin:2px;padding:4px 6px;border-radius:6px;font-weight:600;opacity:0;transition:opacity .5s}
-    .amino{display:inline-block;margin:3px;padding:6px 10px;border-radius:20px;font-weight:600;color:#fff;position:relative}
-    .amino:hover::after{
-      content: attr(data-tooltip);
-      position:absolute;bottom:110%;left:50%;transform:translateX(-50%);
-      background:#000;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px;white-space:nowrap;
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+      background: radial-gradient(1200px 600px at 70% -20%, rgba(34,211,238,.15), transparent 60%),
+                  radial-gradient(1000px 600px at 0% 100%, rgba(122,162,255,.12), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      line-height:1.6;
     }
-    .dna-seq span{display:inline-block;margin:1px;padding:2px 4px;border-radius:4px;font-weight:700;transition:background .3s}
-    .dna-highlight{animation:pulse 1s ease}
-    @keyframes pulse{
-      0%{background:#facc15;color:#000}
-      100%{}
+    a{color:inherit}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    .btn{
+      display:inline-flex;align-items:center;gap:10px;
+      background: linear-gradient(90deg, var(--accent), var(--primary));
+      color:white;text-decoration:none;
+      padding:14px 22px;border-radius:16px;
+      font-weight:700;letter-spacing:.3px;
+      box-shadow: var(--shadow);
+      border:0; cursor:pointer;
+      transition: transform .15s ease, filter .2s ease;
     }
-    footer{text-align:center;padding:20px;color:var(--muted)}
+    .btn:focus-visible{outline:3px solid var(--ring);outline-offset:4px;border-radius:18px}
+    .btn:hover{transform: translateY(-1px)}
+    .btn.secondary{
+      background: transparent;border:1px solid rgba(148,163,184,.25);
+      color: var(--text);
+      backdrop-filter: blur(6px);
+    }
+
+    /* Navbar */
+    .nav{
+      position: sticky; top:0; z-index: 50;
+      backdrop-filter: saturate(140%) blur(10px);
+      background: linear-gradient(to right, rgba(17,24,39,.75), rgba(2,6,23,.75));
+      border-bottom: 1px solid rgba(148,163,184,.15);
+    }
+    :root.light .nav{
+      background: rgba(255,255,255,.7);
+      border-bottom-color: rgba(2,6,23,.08);
+    }
+    .nav-inner{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; padding:16px 24px;
+    }
+    .brand{display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.5px}
+    .brand-logo{
+      width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+      background: radial-gradient(100px 60px at 70% 30%, var(--accent), transparent 60%),
+                  linear-gradient(180deg, var(--primary), #3b82f6);
+      box-shadow: var(--shadow);
+    }
+    .nav-actions{display:flex; align-items:center; gap:10px}
+
+    /* Hero */
+    .hero{padding: clamp(64px, 10vw, 120px) 24px 40px}
+    .hero-grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:32px; align-items:center}
+    @media (max-width: 950px){ .hero-grid{grid-template-columns:1fr} }
+    .title{font-size: clamp(32px, 4vw, 56px);line-height:1.05;margin:0 0 12px;font-weight:800}
+    .subtitle{color: var(--muted); font-size: clamp(16px, 1.6vw, 18px); margin:0 0 24px}
+    .hero-cta{display:flex; gap:12px; flex-wrap:wrap}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(148,163,184,.15);
+      border-radius:20px; padding:20px; box-shadow: var(--shadow);
+    }
+    :root.light .card{background:#fff;border-color: rgba(2,6,23,.08)}
+    .pill{display:inline-block; font-size:12px; text-transform:uppercase; letter-spacing:.6px;
+      color: var(--muted); background: rgba(148,163,184,.1); padding:6px 10px; border-radius:999px; margin-bottom:10px}
+
+    /* Sections */
+    section{padding: 56px 0}
+    .section-title{font-size: clamp(24px, 2.6vw, 34px); margin: 0 0 12px; font-weight:800}
+    .section-sub{color: var(--muted); margin:0 0 24px}
+
+    /* Comparison Cards */
+    .grid{display:grid; gap:16px}
+    .grid-2{grid-template-columns: repeat(2, minmax(0,1fr))}
+    @media (max-width: 900px){ .grid-2{grid-template-columns:1fr} }
+    .compare-card{
+      position:relative; overflow:hidden; border-radius:16px; padding:18px 18px 18px 18px;
+      border:1px solid rgba(148,163,184,.15); background: var(--card);
+      transition: transform .2s ease, border-color .2s ease;
+      min-height: 160px;
+    }
+    :root.light .compare-card{background:#fff;border-color: rgba(2,6,23,.08)}
+    .compare-card:hover{transform: translateY(-3px); border-color: rgba(34,211,238,.35)}
+    .badge{font-size:12px; padding:6px 10px; border-radius:999px; background: rgba(34,211,238,.16); color: var(--accent); font-weight:700}
+    .compare-title{margin:10px 0 6px; font-weight:800; font-size:20px}
+    .compare-text{color: var(--muted); margin:0}
+
+    /* Table */
+    .table{
+      width:100%; border-collapse: collapse; overflow:hidden; border-radius:16px;
+      border:1px solid rgba(148,163,184,.2); background: var(--card);
+    }
+    :root.light .table{background:#fff;border-color: rgba(2,6,23,.08)}
+    .table th,.table td{padding:14px 16px; text-align:left; border-top:1px solid rgba(148,163,184,.12)}
+    .table thead th{background: rgba(148,163,184,.08); font-size:14px; letter-spacing:.3px}
+    .table tbody tr:hover{background: rgba(148,163,184,.07)}
+
+    /* CTA Section */
+    .cta{
+      padding: 64px 24px; text-align:center;
+      background: radial-gradient(600px 200px at 50% 0%, rgba(34,211,238,.25), transparent 60%),
+                  linear-gradient(180deg, rgba(59,130,246,.22), transparent);
+      border-top:1px solid rgba(148,163,184,.15);
+      border-bottom:1px solid rgba(148,163,184,.15);
+    }
+    .cta h3{font-size: clamp(24px, 3vw, 40px); margin:0 0 10px}
+    .cta p{color: var(--muted); margin: 0 0 20px}
+
+    /* Footer */
+    footer{padding: 40px 24px; color: var(--muted); text-align:center}
+
+    /* 3D canvas box */
+    .helix-box{
+      position:relative; min-height: 360px; border-radius: 16px; overflow:hidden;
+      border:1px solid rgba(148,163,184,.15); background: linear-gradient(180deg, rgba(148,163,184,.08), transparent);
+    }
+    .helix-canvas{display:block; width:100%; height:360px}
+    .canvas-overlay{
+      position:absolute; inset:0; background: radial-gradient(400px 160px at 80% 20%, rgba(255,255,255,.08), transparent 50%);
+      pointer-events:none;
+    }
+
+    /* Motion prefers reduced */
+    @media (prefers-reduced-motion: reduce){
+      .btn{transition:none}
+      .compare-card{transition:none}
+    }
   </style>
-  <script src="./assets/js/dna.js"></script>
+
+  <!-- Three.js -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1 class="title">🧬 Simulador DNA → RNA → Proteína</h1>
-    <div class="card">
-      <label for="dnaInput" class="box-title">Sequência de DNA:</label>
-      <textarea id="dnaInput" rows="3" placeholder="Digite a sequência de DNA (ex: ATGCCG...)"></textarea>
-      <div style="margin-top:12px">
-        <button class="btn btn-primary" onclick="processar()">▶️ Simular</button>
-        <button class="btn btn-secondary" onclick="limpar()">♻️ Limpar</button>
+  <!-- Navbar -->
+  <nav class="nav" aria-label="Navegação principal">
+    <div class="nav-inner container">
+      <div class="brand" aria-label="Marca DNA RNA">
+        <div class="brand-logo" aria-hidden="true">
+          <!-- simple DNA icon -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 3c6 4 6 14 12 18" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".9"/>
+            <path d="M18 3c-6 4-6 14-12 18" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+          </svg>
+        </div>
+        <span>DNA • RNA</span>
       </div>
-      <div style="margin-top:12px">
-        Exemplos rápidos: 
-        <button class="btn btn-secondary" onclick="usarExemplo('ATGCCGTA')">ATGCCGTA</button>
-        <button class="btn btn-secondary" onclick="usarExemplo('TACGGTCA')">TACGGTCA</button>
-        <button class="btn btn-secondary" onclick="usarExemplo('ATGTTTGGGCCC')">ATGTTTGGGCCC</button>
+      <div class="nav-actions">
+        <button class="btn secondary" id="themeToggle" aria-pressed="false" aria-label="Alternar tema">
+          <span id="themeLabel">Tema: Escuro</span>
+        </button>
+        <a class="btn" href="simulator.html" role="button" aria-label="Abrir simulador de DNA para RNA e proteína">
+          Ir para o Simulador
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 5l7 7-7 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
       </div>
     </div>
+  </nav>
 
-    <div class="card output-box">
-      <h3 class="box-title">RNA Transcrito:</h3>
-      <div id="rnaOutput" class="code-box"></div>
-    </div>
-
-    <div class="card output-box">
-      <h3 class="box-title">Aminoácidos Formados:</h3>
-      <div id="proteinaOutput" class="code-box"></div>
-    </div>
-
-    <div class="card output-box">
-      <h3 class="box-title">Mutação:</h3>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px">
-        <div>
-          <label class="box-title">Tipo:</label>
-          <select id="tipoMutacao" style="width:100%;padding:8px;border-radius:8px">
-            <option value="substituir">Substituição</option>
-            <option value="inserir">Inserção</option>
-            <option value="deletar">Deleção</option>
-          </select>
-        </div>
-        <div>
-          <label class="box-title">Posição:</label>
-          <input type="number" id="posicaoMutacao" style="width:100%;padding:8px;border-radius:8px" placeholder="Ex: 3">
-        </div>
-        <div>
-          <label class="box-title">Base:</label>
-          <input type="text" id="baseMutacao" maxlength="1" style="width:100%;padding:8px;border-radius:8px" placeholder="A, T, C ou G">
-        </div>
-        <div style="display:flex;align-items:flex-end">
-          <button class="btn btn-warning" style="width:100%" onclick="aplicarMutacao()">⚡ Aplicar Mutação</button>
-        </div>
-      </div>
+  <!-- Hero -->
+  <header class="hero">
+    <div class="container hero-grid">
       <div>
-        <strong>DNA Atual:</strong>
-        <div id="dnaAtual" class="code-box dna-seq"></div>
+        <span class="pill">Biologia Molecular • Intuitivo</span>
+        <h1 class="title">Do <em style="color:var(--accent);font-style:normal;">DNA</em> ao <em style="color:var(--primary);font-style:normal;">RNA</em> e às <strong style="font-style:normal;">Proteínas</strong></h1>
+        <p class="subtitle">
+          Aprenda como a informação genética é copiada (transcrição) e lida (tradução) — com exemplos visuais e um simulador interativo feito para você.
+        </p>
+        <div class="hero-cta">
+          <a class="btn" href="simulator.html">Explorar Simulador</a>
+          <a class="btn secondary" href="#aprenda">Aprender o básico</a>
+        </div>
+      </div>
+      <div class="card" aria-labelledby="viz-title">
+        <span class="pill" id="viz-title">Visual 3D</span>
+        <div class="helix-box" role="img" aria-label="Animação 3D de dupla hélice de DNA girando">
+          <canvas id="helix" class="helix-canvas"></canvas>
+          <div class="canvas-overlay"></div>
+        </div>
+        <small style="color:var(--muted);display:block;margin-top:10px">Use o mouse/touch para girar e explorar.</small>
       </div>
     </div>
-  </div>
-  <footer>Feito para estudantes • DNA Simulador</footer>
+  </header>
 
+  <main>
+    <!-- Aprenda: DNA -->
+    <section id="aprenda">
+      <div class="container">
+        <h2 class="section-title">O que é DNA?</h2>
+        <p class="section-sub">
+          O <strong>DNA</strong> é a molécula que guarda as instruções de construção e funcionamento dos seres vivos.
+          Seu formato é uma <em>dupla hélice</em> composta por bases A, T, C e G, que formam pares complementares.
+        </p>
+
+        <div class="grid grid-2">
+          <div class="compare-card">
+            <span class="badge">Estrutura</span>
+            <h3 class="compare-title">Dupla Hélice Estável</h3>
+            <p class="compare-text">Duas fitas antiparalelas conectadas por pares de bases (A–T e C–G) e um esqueleto açúcar-fosfato.</p>
+          </div>
+          <div class="compare-card">
+            <span class="badge">Função</span>
+            <h3 class="compare-title">Armazenamento de Informação</h3>
+            <p class="compare-text">Mantém o “manual” genético e pode ser replicado fielmente durante a divisão celular.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RNA -->
+    <section>
+      <div class="container">
+        <h2 class="section-title">E o RNA?</h2>
+        <p class="section-sub">
+          O <strong>RNA</strong> é como uma cópia de trabalho do DNA. Ele usa U no lugar de T e leva a informação até o ribossomo,
+          onde a sequência é lida em trincas (<em>códons</em>) para formar proteínas.
+        </p>
+
+        <div class="grid grid-2">
+          <div class="compare-card">
+            <span class="badge">Tipos</span>
+            <h3 class="compare-title">mRNA, tRNA e rRNA</h3>
+            <p class="compare-text">mRNA carrega a mensagem, tRNA traz aminoácidos e rRNA compõe o ribossomo.</p>
+          </div>
+          <div class="compare-card">
+            <span class="badge">Processos</span>
+            <h3 class="compare-title">Transcrição &amp; Tradução</h3>
+            <p class="compare-text">DNA → RNA (transcrição) e RNA → proteína (tradução). Clique abaixo para ver na prática.</p>
+            <div style="margin-top:12px">
+              <a class="btn" href="simulator.html" aria-label="Abrir simulador para visualizar transcrição e tradução">Ver no Simulador</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparativo DNA vs RNA -->
+    <section aria-labelledby="comp-title">
+      <div class="container">
+        <h2 id="comp-title" class="section-title">DNA vs RNA</h2>
+        <p class="section-sub">Diferenças-chave entre as moléculas. Toque nos cards para mais detalhes.</p>
+
+        <div class="grid grid-2" style="margin-bottom:18px">
+          <div class="compare-card" tabindex="0" aria-label="DNA: açúcar desoxirribose, dupla fita, bases A-T-C-G">
+            <span class="badge">DNA</span>
+            <h3 class="compare-title">Desoxirribose • Dupla Fita</h3>
+            <p class="compare-text">Bases: A, T, C, G • Função: armazenamento</p>
+          </div>
+          <div class="compare-card" tabindex="0" aria-label="RNA: açúcar ribose, fita simples, bases A-U-C-G">
+            <span class="badge">RNA</span>
+            <h3 class="compare-title">Ribose • Fita Simples</h3>
+            <p class="compare-text">Bases: A, U, C, G • Função: expressão da informação</p>
+          </div>
+        </div>
+
+        <div class="card" aria-hidden="true" style="overflow-x:auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Característica</th>
+                <th>DNA</th>
+                <th>RNA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Açúcar</td>
+                <td>Desoxirribose</td>
+                <td>Ribose</td>
+              </tr>
+              <tr>
+                <td>Número de fitas</td>
+                <td>Dupla</td>
+                <td>Simples (geralmente)</td>
+              </tr>
+              <tr>
+                <td>Bases</td>
+                <td>A, T, C, G</td>
+                <td>A, U, C, G</td>
+              </tr>
+              <tr>
+                <td>Função principal</td>
+                <td>Armazenar a informação genética</td>
+                <td>Expressar a informação (mensagem, transporte, ribossomo)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Final -->
+    <section class="cta" aria-labelledby="cta-title">
+      <div class="container" style="text-align:center">
+        <h3 id="cta-title">Pronto para explorar a genética em ação?</h3>
+        <p>Acesse o simulador e veja, passo a passo, como a sequência de DNA vira RNA e depois proteína.</p>
+        <a class="btn" href="simulator.html">Abrir Simulador agora</a>
+      </div>
+    </section>
+
+    <!-- Future Expansion -->
+    <section>
+      <div class="container card">
+        <span class="pill">Futuro</span>
+        <h3 class="section-title" style="margin-top:0">Blog & Artigos</h3>
+        <p class="section-sub">Esta área pode crescer com posts curtos: curiosidades, aplicações médicas e problemas práticos para estudar.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Feito para estudantes • Acessível • <span aria-hidden="true">🧬</span>
+  </footer>
+
+  <!-- Scripts -->
   <script>
-    function usarExemplo(seq){
-      document.getElementById('dnaInput').value = seq;
-      processar();
-    }
+    // ——— Dark/Light mode ———
+    (function(){
+      const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      const theme = localStorage.getItem('theme') || (prefersLight ? 'light' : 'dark');
+      if(theme === 'light') document.documentElement.classList.add('light');
+      const label = document.getElementById('themeLabel');
+      if(label) label.textContent = 'Tema: ' + (document.documentElement.classList.contains('light') ? 'Claro' : 'Escuro');
 
-    // Color mapping
-    function colorBase(b){
-      const map = {A:'#f87171',T:'#fbbf24',C:'#34d399',G:'#60a5fa',U:'#a78bfa'};
-      return map[b]||'#d1d5db';
-    }
-
-    const origAtualizar = atualizarVisual;
-    atualizarVisual = function(){
-      origAtualizar();
-      const dnaEl = document.getElementById('dnaAtual');
-      dnaEl.innerHTML = dnaOriginal.split('').map((c,i) =>
-        `<span id="dna_${i}" style="background:${colorBase(c)}20;color:${colorBase(c)}">${c}</span>`).join('');
-
-      const rnaEl = document.getElementById('rnaOutput');
-      rnaEl.querySelectorAll('.codon').forEach((el,idx)=>{
-        el.style.background=colorBase(el.textContent[0])+'33';
-        el.style.color=colorBase(el.textContent[0]);
-        setTimeout(()=>{el.style.opacity=1}, idx*200);
-      });
-
-      const protEl = document.getElementById('proteinaOutput');
-      protEl.querySelectorAll('.amino').forEach(el=>{
-        const aa = el.textContent.trim();
-        el.style.background= 'linear-gradient(90deg,'+colorBase(aa[0])+','+colorBase(aa.slice(-1))+')';
-        el.setAttribute('data-tooltip','Aminoácido: '+aa);
-      });
-    }
-
-    // Destaque mutação
-    const origMutacao = aplicarMutacao;
-    aplicarMutacao = function(){
-      const pos = parseInt(document.getElementById('posicaoMutacao').value) - 1;
-      origMutacao();
-      if(!isNaN(pos) && document.getElementById('dna_'+pos)){
-        document.getElementById('dna_'+pos).classList.add('dna-highlight');
-        setTimeout(()=>{
-          if(document.getElementById('dna_'+pos))
-            document.getElementById('dna_'+pos).classList.remove('dna-highlight');
-        },1000);
+      const btn = document.getElementById('themeToggle');
+      if(btn){
+        btn.addEventListener('click', ()=>{
+          document.documentElement.classList.toggle('light');
+          const isLight = document.documentElement.classList.contains('light');
+          localStorage.setItem('theme', isLight?'light':'dark');
+          document.getElementById('themeLabel').textContent = 'Tema: ' + (isLight ? 'Claro' : 'Escuro');
+          // Re-tint scene colors
+          try { if(window.__helixSetTheme) window.__helixSetTheme(isLight?'light':'dark'); } catch(e){}
+        });
       }
-    }
+    })();
+
+    // ——— 3D Helix (vanilla three.js) ———
+    (function(){
+      const canvas = document.getElementById('helix');
+      if(!canvas || !window.THREE) return;
+
+      const scene = new THREE.Scene();
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+      const sizes = { w: canvas.clientWidth, h: canvas.clientHeight };
+      renderer.setSize(sizes.w, sizes.h, false);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const camera = new THREE.PerspectiveCamera(55, sizes.w/sizes.h, 0.1, 100);
+      camera.position.set(0, 0.6, 8);
+      scene.add(camera);
+
+      const light = new THREE.DirectionalLight(0xffffff, .9);
+      light.position.set(3,4,5);
+      scene.add(light);
+      const amb = new THREE.AmbientLight(0xffffff, .5);
+      scene.add(amb);
+
+      const group = new THREE.Group();
+      scene.add(group);
+
+      const helixRadius = 1.6;
+      const helixHeight = 7.5;
+      const turns = 12;
+      const steps = 160;
+
+      let matA = new THREE.MeshStandardMaterial({ color: 0x22d3ee, roughness:.3, metalness:.1 });
+      let matB = new THREE.MeshStandardMaterial({ color: 0x7aa2ff, roughness:.3, metalness:.1 });
+      let barMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness:.5, metalness:.2 });
+
+      function buildHelix(){
+        const spheres = new THREE.SphereGeometry(.12, 16, 16);
+        for(let i=0; i<steps; i++){
+          const t = i / steps;
+          const angle = t * turns * Math.PI * 2;
+          const y = t * helixHeight - helixHeight/2;
+
+          const x1 = Math.cos(angle) * helixRadius;
+          const z1 = Math.sin(angle) * helixRadius;
+          const x2 = Math.cos(angle + Math.PI) * helixRadius;
+          const z2 = Math.sin(angle + Math.PI) * helixRadius;
+
+          const s1 = new THREE.Mesh(spheres, matA); s1.position.set(x1,y,z1); group.add(s1);
+          const s2 = new THREE.Mesh(spheres, matB); s2.position.set(x2,y,z2); group.add(s2);
+
+          if(i % 3 === 0){
+            const len = helixRadius*2;
+            const cyl = new THREE.CylinderGeometry(.04, .04, len, 10);
+            const bar = new THREE.Mesh(cyl, barMat);
+            const midX = (x1+x2)/2, midY = y, midZ = (z1+z2)/2;
+            bar.position.set(midX, midY, midZ);
+            const dx = x2-x1, dz=z2-z1;
+            const angleY = Math.atan2(dz, dx);
+            bar.rotation.y = angleY; bar.rotation.z = Math.PI/2;
+            group.add(bar);
+          }
+        }
+      }
+      buildHelix();
+
+      // Subtle floating animation
+      let t = 0;
+      function animate(){
+        t += 0.005;
+        group.rotation.y += 0.004;
+        group.position.y = Math.sin(t)*0.15;
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      // Resize
+      function onResize(){
+        const rect = canvas.getBoundingClientRect();
+        const w = Math.floor(rect.width), h = Math.floor(rect.height);
+        renderer.setSize(w, h, false);
+        camera.aspect = w/h; camera.updateProjectionMatrix();
+      }
+      window.addEventListener('resize', onResize);
+      onResize();
+
+      // Simple drag to rotate
+      let dragging=false, lastX=0, lastY=0;
+      canvas.addEventListener('pointerdown', e=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; canvas.setPointerCapture(e.pointerId) });
+      canvas.addEventListener('pointerup', e=>{ dragging=false; canvas.releasePointerCapture(e.pointerId) });
+      canvas.addEventListener('pointermove', e=>{
+        if(!dragging) return;
+        const dx = (e.clientX - lastX) * 0.005;
+        const dy = (e.clientY - lastY) * 0.005;
+        group.rotation.y += dx; group.rotation.x += dy;
+        lastX = e.clientX; lastY = e.clientY;
+      });
+
+      // Theme tint
+      window.__helixSetTheme = (mode)=>{
+        if(mode==='light'){
+          matA.color.set(0x06b6d4);
+          matB.color.set(0x1e40af);
+          barMat.color.set(0x111827);
+          renderer.setClearColor(0x000000, 0);
+        }else{
+          matA.color.set(0x22d3ee);
+          matB.color.set(0x7aa2ff);
+          barMat.color.set(0xffffff);
+          renderer.setClearColor(0x000000, 0);
+        }
+      };
+    })();
   </script>
 </body>
 </html>

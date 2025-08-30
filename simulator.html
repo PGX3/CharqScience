@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador DNA → RNA → Proteína</title>
+  <meta name="color-scheme" content="light dark">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0b1020;
+      --card: #111835;
+      --text: #e8eefc;
+      --muted: #aab7d4;
+      --primary: #7aa2ff;
+      --accent: #22d3ee;
+      --ring: #3b82f6;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    :root.light{
+      --bg: #f6f8ff;
+      --card: #ffffff;
+      --text: #0b1020;
+      --muted: #475569;
+      --primary: #1e40af;
+      --accent: #06b6d4;
+      --ring: #2563eb;
+      --shadow: 0 10px 30px rgba(2,6,23,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter, sans-serif;background:var(--bg);color:var(--text);}
+    .container{max-width:1000px;margin:auto;padding:24px}
+    .title{text-align:center;font-size:clamp(26px,3vw,40px);margin:20px 0;font-weight:800}
+    .card{background:var(--card);border-radius:16px;padding:24px;margin-bottom:24px;
+      box-shadow:var(--shadow);border:1px solid rgba(148,163,184,.15);}
+    textarea{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(148,163,184,.2);
+      background:rgba(255,255,255,.05);color:var(--text);font-family:monospace;font-size:15px}
+    textarea:focus{outline:3px solid var(--ring)}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;margin:6px;border-radius:12px;
+      font-weight:600;cursor:pointer;border:0;transition:transform .2s}
+    .btn-primary{background:linear-gradient(90deg,var(--accent),var(--primary));color:white}
+    .btn-secondary{background:transparent;color:var(--text);border:1px solid rgba(148,163,184,.25)}
+    .btn-warning{background:#facc15;color:#0b1020}
+    .btn:hover{transform:translateY(-2px)}
+    .output-box{margin-top:20px}
+    .box-title{font-weight:700;margin-bottom:8px}
+    .code-box{background:rgba(255,255,255,.05);padding:12px;border-radius:8px;font-family:monospace;word-wrap:break-word}
+    .codon{display:inline-block;margin:2px;padding:4px 6px;border-radius:6px;font-weight:600;opacity:0;transition:opacity .5s}
+    .amino{display:inline-block;margin:3px;padding:6px 10px;border-radius:20px;font-weight:600;color:#fff;position:relative}
+    .amino:hover::after{
+      content: attr(data-tooltip);
+      position:absolute;bottom:110%;left:50%;transform:translateX(-50%);
+      background:#000;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px;white-space:nowrap;
+    }
+    .dna-seq span{display:inline-block;margin:1px;padding:2px 4px;border-radius:4px;font-weight:700;transition:background .3s}
+    .dna-highlight{animation:pulse 1s ease}
+    @keyframes pulse{
+      0%{background:#facc15;color:#000}
+      100%{}
+    }
+    footer{text-align:center;padding:20px;color:var(--muted)}
+  </style>
+  <script src="./assets/js/dna.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">🧬 Simulador DNA → RNA → Proteína</h1>
+    <div class="card">
+      <label for="dnaInput" class="box-title">Sequência de DNA:</label>
+      <textarea id="dnaInput" rows="3" placeholder="Digite a sequência de DNA (ex: ATGCCG...)"></textarea>
+      <div style="margin-top:12px">
+        <button class="btn btn-primary" onclick="processar()">▶️ Simular</button>
+        <button class="btn btn-secondary" onclick="limpar()">♻️ Limpar</button>
+      </div>
+      <div style="margin-top:12px">
+        Exemplos rápidos: 
+        <button class="btn btn-secondary" onclick="usarExemplo('ATGCCGTA')">ATGCCGTA</button>
+        <button class="btn btn-secondary" onclick="usarExemplo('TACGGTCA')">TACGGTCA</button>
+        <button class="btn btn-secondary" onclick="usarExemplo('ATGTTTGGGCCC')">ATGTTTGGGCCC</button>
+      </div>
+    </div>
+
+    <div class="card output-box">
+      <h3 class="box-title">RNA Transcrito:</h3>
+      <div id="rnaOutput" class="code-box"></div>
+    </div>
+
+    <div class="card output-box">
+      <h3 class="box-title">Aminoácidos Formados:</h3>
+      <div id="proteinaOutput" class="code-box"></div>
+    </div>
+
+    <div class="card output-box">
+      <h3 class="box-title">Mutação:</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px">
+        <div>
+          <label class="box-title">Tipo:</label>
+          <select id="tipoMutacao" style="width:100%;padding:8px;border-radius:8px">
+            <option value="substituir">Substituição</option>
+            <option value="inserir">Inserção</option>
+            <option value="deletar">Deleção</option>
+          </select>
+        </div>
+        <div>
+          <label class="box-title">Posição:</label>
+          <input type="number" id="posicaoMutacao" style="width:100%;padding:8px;border-radius:8px" placeholder="Ex: 3">
+        </div>
+        <div>
+          <label class="box-title">Base:</label>
+          <input type="text" id="baseMutacao" maxlength="1" style="width:100%;padding:8px;border-radius:8px" placeholder="A, T, C ou G">
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn btn-warning" style="width:100%" onclick="aplicarMutacao()">⚡ Aplicar Mutação</button>
+        </div>
+      </div>
+      <div>
+        <strong>DNA Atual:</strong>
+        <div id="dnaAtual" class="code-box dna-seq"></div>
+      </div>
+    </div>
+  </div>
+  <footer>Feito para estudantes • DNA Simulador</footer>
+
+  <script>
+    function usarExemplo(seq){
+      document.getElementById('dnaInput').value = seq;
+      processar();
+    }
+
+    // Color mapping
+    function colorBase(b){
+      const map = {A:'#f87171',T:'#fbbf24',C:'#34d399',G:'#60a5fa',U:'#a78bfa'};
+      return map[b]||'#d1d5db';
+    }
+
+    const origAtualizar = atualizarVisual;
+    atualizarVisual = function(){
+      origAtualizar();
+      const dnaEl = document.getElementById('dnaAtual');
+      dnaEl.innerHTML = dnaOriginal.split('').map((c,i) =>
+        `<span id="dna_${i}" style="background:${colorBase(c)}20;color:${colorBase(c)}">${c}</span>`).join('');
+
+      const rnaEl = document.getElementById('rnaOutput');
+      rnaEl.querySelectorAll('.codon').forEach((el,idx)=>{
+        el.style.background=colorBase(el.textContent[0])+'33';
+        el.style.color=colorBase(el.textContent[0]);
+        setTimeout(()=>{el.style.opacity=1}, idx*200);
+      });
+
+      const protEl = document.getElementById('proteinaOutput');
+      protEl.querySelectorAll('.amino').forEach(el=>{
+        const aa = el.textContent.trim();
+        el.style.background= 'linear-gradient(90deg,'+colorBase(aa[0])+','+colorBase(aa.slice(-1))+')';
+        el.setAttribute('data-tooltip','Aminoácido: '+aa);
+      });
+    }
+
+    // Destaque mutação
+    const origMutacao = aplicarMutacao;
+    aplicarMutacao = function(){
+      const pos = parseInt(document.getElementById('posicaoMutacao').value) - 1;
+      origMutacao();
+      if(!isNaN(pos) && document.getElementById('dna_'+pos)){
+        document.getElementById('dna_'+pos).classList.add('dna-highlight');
+        setTimeout(()=>{
+          if(document.getElementById('dna_'+pos))
+            document.getElementById('dna_'+pos).classList.remove('dna-highlight');
+        },1000);
+      }
+    }
+  </script>
+</body>
+</html>
